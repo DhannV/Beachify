@@ -10,12 +10,10 @@ const ITEM_GAP = 15;
 
 // Gambar mock untuk contoh. Nanti gunakan require('../assets/images/new_1.jpg')
 const MOCK_IMAGES = [
-  require("../../assets/images/image 11.png"),
-  require("../../assets/images/image 12.png"),
-  require("../../assets/images/image 13.png"),
-  require("../../assets/images/image 14.png"),
-  require("../../assets/images/image 15.png"),
-  require("../../assets/images/image 16.png"),
+  require("../../assets/images/Pantai_Bengkung.jpg"),
+  require("../../assets/images/Pantai_GoaChina.jpg"),
+  require("../../assets/images/Pantai_KondangMerak.jpeg"),
+  require("../../assets/images/Pantai_TelukAsmara.jpg"),
 ];
 
 const Carousel = () => {

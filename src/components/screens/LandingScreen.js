@@ -1,31 +1,28 @@
-// src/screens/LandingScreen.js
-import React from "react";
-import { ScrollView, View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { ScrollView, View, Text, StyleSheet, Image } from "react-native";
+
+// --- IMPORT KOMPONEN ---
+// Pastikan huruf besar/kecil dan jalurnya sesuai dengan file di foldermu
 import Navbar from "../navbar";
 import Carousel from "../carousel";
 import DestinationCard from "../destinationcard";
-import { COLORS } from "../../../assets/theme/colors";
+import CategoryFilter from "../CategoryFilter"; // Komponen filter kategori baru
 
-// Contoh data untuk destinasi. Nanti bisa diganti dengan require('../assets/images/...)
-const popularDestinations = [
-  {
-    id: "1",
-    title: "Alun alun Kota Malang",
-    price: "Rp.100.000",
-    description:
-      "Lorem ipsum dolor sit amet consectetur. Ultrices. Adipiscing.",
-    image: require("../../../assets/images/alunalun.png"),
-  },
-  {
-    id: "2",
-    title: "Jatim Park",
-    price: "Rp.100.000",
-    description: "Lorem ipsum dolor sit amet consectetur. Ultrices.",
-    image: require("../../../assets/images/jatimpark.png"),
-  },
-];
+// --- IMPORT TEMA & DATA ---
+import { COLORS } from "../../../assets/theme/colors";
+// Sesuaikan jumlah titik (../) di bawah ini dengan letak folder data kamu
+import { CategoryList, DestinationList } from "../../data/destination";
 
 const LandingScreen = () => {
+  // Menerapkan STATE: Mengingat kategori apa yang sedang dipilih (Default: Popular)
+  const [selectedCategory, setSelectedCategory] = useState("Popular");
+
+  // Logika Filter: Jika "Popular", tampilkan semua. Jika tidak, filter sesuai kategori.
+  const filteredDestinations =
+    selectedCategory === "Popular"
+      ? DestinationList
+      : DestinationList.filter((item) => item.category === selectedCategory);
+
   return (
     <View style={styles.mainContainer}>
       {/* 1. Navbar tetap di atas */}
@@ -38,25 +35,30 @@ const LandingScreen = () => {
       >
         {/* --- Section 1: Hero / What is Wilang --- */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>What is “Wilang” ?</Text>
+          <Text style={styles.sectionHeader}>What is Beachify</Text>
+
           <View style={styles.descriptionBlock}>
             <Text style={styles.bodyText}>
-              Lorem ipsum dolor sit amet consectetur. Tellus adipiscing a
-              lacinia lacus nisi aliquet nec mauris pellentesque. Porta varius
-              senectus euismod posuere amet elit lobortis tempus augue. Cras et
-              pretium velit nisi mattis varius sagittis eget. Non nibh sit
-              quisque mi purus est.
+              Beachify adalah aplikasi yang dirancang untuk membantu kamu
+              menemukan berbagai rekomendasi pantai terbaik di Malang dengan
+              mudah dan praktis. Malang dikenal memiliki banyak pantai indah
+              dengan karakteristik yang berbeda, mulai dari pasir putih yang
+              lembut hingga tebing dan ombak yang eksotis, dan Beachify hadir
+              untuk merangkum semuanya dalam satu platform.
             </Text>
             <Text style={styles.bodyText}>
-              A suspendisse quis eleifend laoreet tristique vestibulum molestie.
-              Lacus pulvinar vulputate viverra adipiscing molestie consectetur
-              morbi nisi. Lectus nulla vestibulum diam euismod convallis
-              imperdiet in.
+              Melalui Beachify, pengguna dapat menjelajahi berbagai pilihan
+              pantai lengkap dengan informasi penting seperti deskripsi, harga
+              tiket masuk, dan gambaran suasana tempat. Dengan tampilan yang
+              sederhana dan interaktif, aplikasi ini memudahkan pengguna dalam
+              mencari destinasi sesuai preferensi, baik untuk liburan santai,
+              berburu foto, maupun petualangan alam.
             </Text>
             <Text style={styles.bodyText}>
-              Sem curabitur tempus vitae bibendum amet ullamcorper. Felis et
-              imperdiet a erat nec viverra. Amet morbi arcu erat eget duis nec.
-              Ut tincidunt massa accumsan lobortis cras neque egestas tincidunt.
+              Dengan Beachify, merencanakan perjalanan ke pantai di Malang
+              menjadi lebih efisien dan menyenangkan. Aplikasi ini menjadi teman
+              perjalanan yang tepat untuk membantu kamu menemukan keindahan
+              tersembunyi dan menikmati liburan yang tak terlupakan.
             </Text>
           </View>
         </View>
@@ -70,19 +72,24 @@ const LandingScreen = () => {
 
         {/* --- Section 3: Popular Destinations --- */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Popular destinations</Text>
-          <Text style={styles.subHeader}>
-            Lorem ipsum dolor sit amet consectetur.
-          </Text>
+          <Text style={styles.sectionHeader}>Popular Destinations</Text>
+          <Text style={styles.subHeader}>Pantai Populer di Malang</Text>
         </View>
 
-        {/* ScrollView Horizontal untuk Card Destinasi */}
+        {/* Menerapkan PROPS pada CategoryFilter */}
+        <CategoryFilter
+          categories={CategoryList}
+          onSelectCategory={(categoryName) => setSelectedCategory(categoryName)}
+        />
+
+        {/* ScrollView Horizontal untuk Card Destinasi yang sudah difilter state */}
         <ScrollView
           horizontal={true}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.destinationScrollContainer}
         >
-          {popularDestinations.map((item) => (
+          {filteredDestinations.map((item) => (
+            // Menerapkan PROPS pada DestinationCard
             <DestinationCard
               key={item.id}
               title={item.title}

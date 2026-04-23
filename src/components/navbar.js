@@ -18,7 +18,7 @@ const Navbar = () => {
       {/* Bagian Kiri: Logo */}
       <View style={styles.logoSection}>
         <Image
-          source={require("../../assets/images/logowilang.png")}
+          source={require("../../assets/images/Logo_Beachify.png")}
           style={styles.logoImage}
         />
       </View>
