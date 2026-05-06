@@ -3,15 +3,15 @@ import { ScrollView, View, Text, StyleSheet, Image } from "react-native";
 
 // --- IMPORT KOMPONEN ---
 // Pastikan huruf besar/kecil dan jalurnya sesuai dengan file di foldermu
-import Navbar from "../navbar";
-import Carousel from "../carousel";
-import DestinationCard from "../destinationcard";
-import CategoryFilter from "../CategoryFilter"; // Komponen filter kategori baru
+import Navbar from "../components/navbar";
+import Carousel from "../components/carousel";
+import DestinationCard from "../components/destinationcard";
+import CategoryFilter from "../components/CategoryFilter"; // Komponen filter kategori baru
 
 // --- IMPORT TEMA & DATA ---
-import { COLORS } from "../../../assets/theme/colors";
+import { COLORS } from "../../assets/theme/colors";
 // Sesuaikan jumlah titik (../) di bawah ini dengan letak folder data kamu
-import { CategoryList, DestinationList } from "../../data/destination";
+import { CategoryList, DestinationList } from "../data/destination";
 
 const LandingScreen = () => {
   // Menerapkan STATE: Mengingat kategori apa yang sedang dipilih (Default: Popular)
@@ -89,14 +89,8 @@ const LandingScreen = () => {
           contentContainerStyle={styles.destinationScrollContainer}
         >
           {filteredDestinations.map((item) => (
-            // Menerapkan PROPS pada DestinationCard
-            <DestinationCard
-              key={item.id}
-              title={item.title}
-              price={item.price}
-              description={item.description}
-              imageSource={item.image}
-            />
+            // Menerapkan PROPS pada DestinationCard - Pass destination object
+            <DestinationCard key={item.id} destination={item} />
           ))}
         </ScrollView>
 

@@ -1,18 +1,30 @@
 // src/components/DestinationCard.js
 import React, { useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../assets/theme/colors";
 // Pastikan kamu sudah install lucide-react-native seperti di modul
 import { Heart } from "lucide-react-native";
 
 // Menerima PROPS dari komponen induk
-const DestinationCard = ({ title, price, description, imageSource }) => {
+const DestinationCard = ({ destination }) => {
   // Menerapkan STATE: Mengingat apakah kartu ini disukai atau tidak
   const [isLiked, setIsLiked] = useState(false);
 
+  // HOOK NAVIGASI: Ambil navigation dari useNavigation
+  const navigation = useNavigation();
+
+  // Fungsi untuk handle card press - navigate ke DetailScreen
+  const handleCardPress = () => {
+    navigation.navigate("Detail", { destination });
+  };
+
+  // Ekstrak data dari destination object
+  const { title, price, description, image } = destination;
+
   return (
-    <TouchableOpacity style={styles.card}>
-      <Image source={imageSource} style={styles.image} />
+    <TouchableOpacity style={styles.card} onPress={handleCardPress}>
+      <Image source={image} style={styles.image} />
 
       {/* Tombol Like menggunakan State */}
       <TouchableOpacity
