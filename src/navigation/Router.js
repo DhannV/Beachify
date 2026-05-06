@@ -3,13 +3,14 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 // Import Screens
-import LandingScreen from "../screens/LandingScreen";
+import Home from "../screens/Home";
+import DiscoverScreen from "../screens/DiscoverScreen";
 import DetailScreen from "../screens/DetailScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import LikedScreen from "../screens/LikedScreen";
 
 // Import Icons
-import { Home, Heart, User } from "lucide-react-native";
+import { Home as HomeIcon, Compass, Heart, User } from "lucide-react-native";
 import { COLORS } from "../../assets/theme/colors";
 
 const Tab = createBottomTabNavigator();
@@ -39,10 +40,19 @@ function MainApp() {
     >
       <Tab.Screen
         name="Home"
-        component={LandingScreen}
+        component={Home}
         options={{
           tabBarLabel: "Home",
-          tabBarIcon: ({ color }) => <Home color={color} size={24} />,
+          tabBarIcon: ({ color }) => <HomeIcon color={color} size={24} />,
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        name="Discover"
+        component={DiscoverScreen}
+        options={{
+          tabBarLabel: "Discover",
+          tabBarIcon: ({ color }) => <Compass color={color} size={24} />,
           headerShown: false,
         }}
       />

@@ -1,6 +1,13 @@
 // src/components/DestinationCard.js
-import React, { useState } from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../assets/theme/colors";
 // Pastikan kamu sudah install lucide-react-native seperti di modul
@@ -11,6 +18,10 @@ const DestinationCard = ({ destination }) => {
   // Menerapkan STATE: Mengingat apakah kartu ini disukai atau tidak
   const [isLiked, setIsLiked] = useState(false);
 
+  // ANIMASI LIKE BUTTON: Scale animation
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeInAnim = useRef(new Animated.Value(0)).current;
+
   // HOOK NAVIGASI: Ambil navigation dari useNavigation
   const navigation = useNavigation();
 
@@ -19,24 +30,74 @@ const DestinationCard = ({ destination }) => {
     navigation.navigate("Detail", { destination });
   };
 
+  // Fungsi Like dengan Animasi
+  const handleLikePress = () => {
+    setIsLiked(!isLiked);
+
+    // Animasi scale heart button
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.3,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Jika baru di-like, trigger pulse animation
+    if (!isLiked) {
+      Animated.timing(fadeInAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        Animated.timing(fadeInAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }).start();
+      });
+    }
+  };
+
   // Ekstrak data dari destination object
   const { title, price, description, image } = destination;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={handleCardPress}>
+    <Animated.View
+      style={[
+        styles.card,
+        {
+          opacity: fadeInAnim.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [1, 0.8, 1],
+          }),
+        },
+      ]}
+    >
       <Image source={image} style={styles.image} />
 
-      {/* Tombol Like menggunakan State */}
-      <TouchableOpacity
-        style={styles.likeButton}
-        onPress={() => setIsLiked(!isLiked)} // Mengubah state (true/false)
+      {/* Tombol Like dengan Animasi */}
+      <Animated.View
+        style={[
+          styles.likeButton,
+          {
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
       >
-        <Heart
-          color={isLiked ? COLORS.accent : COLORS.white}
-          fill={isLiked ? COLORS.accent : "transparent"}
-          size={24}
-        />
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleLikePress}>
+          <Heart
+            color={isLiked ? COLORS.accent : COLORS.white}
+            fill={isLiked ? COLORS.accent : "transparent"}
+            size={24}
+          />
+        </TouchableOpacity>
+      </Animated.View>
 
       <View style={styles.detailsContainer}>
         <Text style={styles.title}>{title}</Text>
@@ -45,7 +106,7 @@ const DestinationCard = ({ destination }) => {
           {description}
         </Text>
       </View>
-    </TouchableOpacity>
+    </Animated.View>
   );
 };
 
@@ -56,13 +117,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: "hidden",
     width: 280,
-    marginRight: 20,
     elevation: 8,
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    marginBottom: 20,
   },
   image: { width: "100%", height: 180, resizeMode: "cover" },
   detailsContainer: { padding: 15 },
