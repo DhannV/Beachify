@@ -14,20 +14,68 @@ import { COLORS } from "../../assets/theme/colors";
 import { Heart } from "lucide-react-native";
 
 // Menerima PROPS dari komponen induk
-const DestinationCard = ({ destination }) => {
+const DestinationCard = ({ destination, delay = 0 }) => {
   // Menerapkan STATE: Mengingat apakah kartu ini disukai atau tidak
   const [isLiked, setIsLiked] = useState(false);
 
   // ANIMASI LIKE BUTTON: Scale animation
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const fadeInAnim = useRef(new Animated.Value(0)).current;
+  const cardScaleAnim = useRef(new Animated.Value(0)).current;
+  const cardOpacityAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
 
   // HOOK NAVIGASI: Ambil navigation dari useNavigation
   const navigation = useNavigation();
 
-  // Fungsi untuk handle card press - navigate ke DetailScreen
+  // Staggered entrance animation untuk card
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(cardScaleAnim, {
+        toValue: 1,
+        duration: 500,
+        delay,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardOpacityAnim, {
+        toValue: 1,
+        duration: 500,
+        delay,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Floating animation untuk image - infinite
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+
+  // Fungsi untuk handle card press - navigate ke DetailScreen dengan scale animation
   const handleCardPress = () => {
-    navigation.navigate("Detail", { destination });
+    Animated.timing(cardScaleAnim, {
+      toValue: 0.95,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      Animated.timing(cardScaleAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+      navigation.navigate("Detail", { destination });
+    });
   };
 
   // Fungsi Like dengan Animasi
@@ -72,32 +120,54 @@ const DestinationCard = ({ destination }) => {
       style={[
         styles.card,
         {
-          opacity: fadeInAnim.interpolate({
-            inputRange: [0, 0.5, 1],
-            outputRange: [1, 0.8, 1],
-          }),
+          opacity: cardOpacityAnim,
+          transform: [
+            {
+              scale: cardScaleAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.8, 1],
+              }),
+            },
+          ],
         },
       ]}
     >
-      <Image source={image} style={styles.image} />
+      <TouchableOpacity onPress={handleCardPress}>
+        <Animated.Image
+          source={image}
+          style={[
+            styles.image,
+            {
+              transform: [
+                {
+                  translateY: floatAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -8],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
 
-      {/* Tombol Like dengan Animasi */}
-      <Animated.View
-        style={[
-          styles.likeButton,
-          {
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <TouchableOpacity onPress={handleLikePress}>
-          <Heart
-            color={isLiked ? COLORS.accent : COLORS.white}
-            fill={isLiked ? COLORS.accent : "transparent"}
-            size={24}
-          />
-        </TouchableOpacity>
-      </Animated.View>
+        {/* Tombol Like dengan Animasi */}
+        <Animated.View
+          style={[
+            styles.likeButton,
+            {
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <TouchableOpacity onPress={handleLikePress}>
+            <Heart
+              color={isLiked ? COLORS.accent : COLORS.white}
+              fill={isLiked ? COLORS.accent : "transparent"}
+              size={24}
+            />
+          </TouchableOpacity>
+        </Animated.View>
+      </TouchableOpacity>
 
       <View style={styles.detailsContainer}>
         <Text style={styles.title}>{title}</Text>

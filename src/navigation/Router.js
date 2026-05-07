@@ -13,6 +13,29 @@ import LikedScreen from "../screens/LikedScreen";
 import { Home as HomeIcon, Compass, Heart, User } from "lucide-react-native";
 import { COLORS } from "../../assets/theme/colors";
 
+// Custom animation: Fade in dari bawah ke atas
+const bottomFadeInAnimation = {
+  cardStyleInterpolator: ({ current, layouts }) => {
+    return {
+      cardStyle: {
+        opacity: current.progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 1],
+        }),
+        transform: [
+          {
+            translateY: current.progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [layouts.screen.height, 0],
+            }),
+          },
+        ],
+      },
+    };
+  },
+  gestureDirection: "vertical",
+};
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +59,8 @@ function MainApp() {
           fontSize: 10,
           fontFamily: "Poppins-Medium",
         },
+        animationEnabled: true,
+        ...bottomFadeInAnimation,
       }}
     >
       <Tab.Screen
@@ -80,7 +105,12 @@ function MainApp() {
 
 const Router = () => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        animationEnabled: true,
+        ...bottomFadeInAnimation,
+      }}
+    >
       <Stack.Screen
         name="MainApp"
         component={MainApp}
@@ -93,7 +123,7 @@ const Router = () => {
           headerShown: false,
           animationEnabled: true,
           gestureEnabled: true,
-          gestureDirection: "horizontal",
+          ...bottomFadeInAnimation,
         }}
       />
     </Stack.Navigator>

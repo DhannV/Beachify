@@ -114,10 +114,77 @@ const AnimatedCardWrapper = ({ children, delay = 0 }) => {
   );
 };
 
+// Component untuk CTA Button dengan Pulse Animation
+const PulseButton = ({ onPress, text }) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Pulse animation - infinite
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Animated.timing(scaleAnim, {
+      toValue: 0.95,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+    onPress();
+  };
+
+  return (
+    <Animated.View
+      style={[
+        { transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }] },
+      ]}
+    >
+      <TouchableOpacity
+        style={styles.ctaButton}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        <Text style={styles.ctaButtonText}>{text}</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 const Home = () => {
   const navigation = useNavigation();
   const [greeting, setGreeting] = useState("");
   const [recentlyViewed, setRecentlyViewed] = useState([]);
+  const screenFadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Screen-level Fade In Animation
+  useEffect(() => {
+    Animated.timing(screenFadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   // Greeting berdasarkan waktu
   useEffect(() => {
@@ -173,7 +240,11 @@ const Home = () => {
         <Carousel />
         {/* Quick Stats Section */}
         <View style={styles.statsSection}>
-          <AnimatedStatCard icon={MapPin} finalValue={DestinationList.length} label="Pantai" />
+          <AnimatedStatCard
+            icon={MapPin}
+            finalValue={DestinationList.length}
+            label="Pantai"
+          />
           <AnimatedStatCard icon={Heart} finalValue={0} label="Favorit" />
           <AnimatedStatCard icon={Users} finalValue={2500} label="Pengunjung" />
         </View>
@@ -202,7 +273,7 @@ const Home = () => {
                     index !== featuredDestinations.length - 1 ? 20 : 0,
                 }}
               >
-                <DestinationCard destination={item} />
+                <DestinationCard destination={item} delay={index * 100} />
               </View>
             </AnimatedCardWrapper>
           ))}
@@ -215,12 +286,10 @@ const Home = () => {
             <Text style={styles.ctaSubtitle}>
               Jelajahi kategori pantai berbeda dan temukan favorit mu
             </Text>
-            <TouchableOpacity
-              style={styles.ctaButton}
+            <PulseButton
               onPress={() => navigation.navigate("Discover")}
-            >
-              <Text style={styles.ctaButtonText}>Jelajahi →</Text>
-            </TouchableOpacity>
+              text="Jelajahi →"
+            />
           </View>
         </View>
 

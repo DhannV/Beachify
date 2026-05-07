@@ -1,5 +1,5 @@
 // src/components/Navbar.js
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,57 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
+  Animated,
 } from "react-native";
 import { COLORS } from "../../assets/theme/colors";
 
 const Navbar = () => {
   const [menuVisible, setMenuVisible] = useState(false);
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const menuItemsAnim = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+
+  const toggleMenu = () => {
+    const newMenuVisibility = !menuVisible;
+    setMenuVisible(newMenuVisibility);
+
+    // Hamburger rotation animation
+    Animated.timing(rotateAnim, {
+      toValue: newMenuVisibility ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    // Staggered menu items animation
+    if (newMenuVisibility) {
+      Animated.stagger(
+        100,
+        menuItemsAnim.map((anim) =>
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ),
+      ).start();
+    } else {
+      menuItemsAnim.forEach((anim) => {
+        Animated.timing(anim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      });
+    }
+  };
+
+  const spinAnim = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "90deg"],
+  });
 
   return (
     <View style={styles.container}>
@@ -24,46 +70,50 @@ const Navbar = () => {
       </View>
 
       {/* Bagian Kanan: Hamburger Menu */}
-      <TouchableOpacity
-        style={styles.hamburger}
-        onPress={() => setMenuVisible(!menuVisible)}
-      >
-        <View style={styles.hamburgerLine} />
-        <View style={styles.hamburgerLine} />
-        <View style={styles.hamburgerLine} />
-      </TouchableOpacity>
+      <Animated.View style={{ transform: [{ rotate: spinAnim }] }}>
+        <TouchableOpacity style={styles.hamburger} onPress={toggleMenu}>
+          <View style={styles.hamburgerLine} />
+          <View style={styles.hamburgerLine} />
+          <View style={styles.hamburgerLine} />
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* Modal Menu */}
       <Modal
         visible={menuVisible}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
+        onRequestClose={() => toggleMenu()}
       >
         <TouchableOpacity
           style={styles.overlay}
-          onPress={() => setMenuVisible(false)}
+          onPress={() => toggleMenu()}
           activeOpacity={1}
         >
           <View style={styles.menuModal}>
-            <TouchableOpacity
-              style={styles.menuItemModal}
-              onPress={() => setMenuVisible(false)}
-            >
-              <Text style={styles.menuTextModal}>About</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItemModal}
-              onPress={() => setMenuVisible(false)}
-            >
-              <Text style={styles.menuTextModal}>Destination</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItemModal}
-              onPress={() => setMenuVisible(false)}
-            >
-              <Text style={styles.menuTextModal}>Contact us</Text>
-            </TouchableOpacity>
+            {["About", "Destination", "Contact us"].map((item, index) => (
+              <Animated.View
+                key={index}
+                style={{
+                  opacity: menuItemsAnim[index],
+                  transform: [
+                    {
+                      translateX: menuItemsAnim[index].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [50, 0],
+                      }),
+                    },
+                  ],
+                }}
+              >
+                <TouchableOpacity
+                  style={styles.menuItemModal}
+                  onPress={() => toggleMenu()}
+                >
+                  <Text style={styles.menuTextModal}>{item}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
           </View>
         </TouchableOpacity>
       </Modal>

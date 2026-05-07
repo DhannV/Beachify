@@ -1,6 +1,13 @@
 // src/components/WhatsNewCarousel.js
-import React from "react";
-import { ScrollView, Image, StyleSheet, Dimensions, View } from "react-native";
+import React, { useRef, useEffect } from "react";
+import {
+  ScrollView,
+  Image,
+  StyleSheet,
+  Dimensions,
+  View,
+  Animated,
+} from "react-native";
 
 // Kita ambil lebar layar agar carousel menyesuaikan
 const { width } = Dimensions.get("window");
@@ -27,11 +34,82 @@ const Carousel = () => {
       contentContainerStyle={styles.container}
     >
       {MOCK_IMAGES.map((imageUri, index) => (
-        <View key={index} style={styles.card}>
-          <Image source={imageUri} style={styles.image} />
-        </View>
+        <CarouselCard key={index} imageUri={imageUri} index={index} />
       ))}
     </ScrollView>
+  );
+};
+
+// Component untuk setiap kartu carousel dengan animasi
+const CarouselCard = ({ imageUri, index }) => {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Entrance animation
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 600,
+      delay: index * 100,
+      useNativeDriver: true,
+    }).start();
+
+    // Floating animation - infinite
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={[
+        styles.card,
+        {
+          transform: [
+            {
+              scale: scaleAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, 1],
+              }),
+            },
+            {
+              translateY: floatAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, -10],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      <Animated.Image
+        source={imageUri}
+        style={[
+          styles.image,
+          {
+            transform: [
+              {
+                scale: floatAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [1, 1.05],
+                }),
+              },
+            ],
+          },
+        ]}
+      />
+    </Animated.View>
   );
 };
 
