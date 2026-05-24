@@ -9,89 +9,65 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { ArrowLeft, Upload } from "lucide-react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { COLORS } from "../../assets/theme/colors";
 import axios from "axios";
 
 const API_URL = "https://6a12f17b78d0434e0d5da5f8.mockapi.io/beaches"; // GANTI DENGAN URL MOCKAPI KAMU
 
-const AddBeachScreen = ({ navigation }) => {
+const EditBeachScreen = ({ route, navigation }) => {
+  const { destination } = route.params;
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    beachName: "",
-    description: "",
-    funFacts: "",
-    selectedCategories: [],
+    beachName: destination.title,
+    description: destination.description,
+    funFacts: destination.funFacts || "",
+    category: destination.category,
   });
 
   const categories = [
-    { id: 1, name: "Popular" },
-    { id: 2, name: "Scenic" },
-    { id: 3, name: "Adventure" },
-    { id: 4, name: "Relaxing" },
-    { id: 5, name: "Wildlife" },
-    { id: 6, name: "Cultural" },
+    "Popular",
+    "Scenic",
+    "Adventure",
+    "Relaxing",
+    "Wildlife",
+    "Cultural",
   ];
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const toggleCategory = (categoryName) => {
-    setFormData((prev) => ({
-      ...prev,
-      selectedCategories: prev.selectedCategories.includes(categoryName)
-        ? prev.selectedCategories.filter((cat) => cat !== categoryName)
-        : [...prev.selectedCategories, categoryName],
-    }));
-  };
-
-  // Fungsi POST Data menggunakan Axios
-  const handleSubmit = async () => {
-    if (
-      !formData.beachName.trim() ||
-      !formData.description.trim() ||
-      formData.selectedCategories.length === 0
-    ) {
+  // Fungsi PUT Data menggunakan Axios
+  const handleUpdate = async () => {
+    if (!formData.beachName.trim() || !formData.description.trim()) {
       Alert.alert(
         "Validation Error",
-        "Please fill all fields and select at least one category!",
+        "Please fill beach name and description!",
       );
       return;
     }
 
-    const newBeachData = {
+    const updatedData = {
       title: formData.beachName,
-      category: formData.selectedCategories[0],
+      category: formData.category,
       description: formData.description,
       funFacts: formData.funFacts,
-      price: "Rp.15.000",
-      image:
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500", // Menggunakan URL String gambar agar kompatibel dengan API
-      timestamp: new Date().toISOString(),
     };
 
     try {
       setLoading(true);
-      await axios.post(API_URL, newBeachData);
+      await axios.put(`${API_URL}/${destination.id}`, updatedData);
 
-      Alert.alert("Success", "Beach added successfully to API!", [
+      Alert.alert("Success", "Beach information updated!", [
         {
           text: "OK",
-          onPress: () => {
-            setFormData({
-              beachName: "",
-              description: "",
-              funFacts: "",
-              selectedCategories: [],
-            });
-            navigation.navigate("MainApp", { screen: "Discover" });
-          },
+          onPress: () => navigation.navigate("MainApp", { screen: "Discover" }),
         },
       ]);
     } catch (error) {
-      console.error("Error posting data: ", error);
-      Alert.alert("Error", "Failed to add beach to server.");
+      console.error("Error updating: ", error);
+      Alert.alert("Error", "Failed to update data.");
     } finally {
       setLoading(false);
     }
@@ -103,7 +79,7 @@ const AddBeachScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ArrowLeft color={COLORS.white} size={24} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add New Beach 🏖️</Text>
+        <Text style={styles.headerTitle}>Edit Beach Info ✏️</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -112,27 +88,20 @@ const AddBeachScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.formTitle}>Share Your Beach Discovery</Text>
-
         <View style={styles.inputSection}>
           <Text style={styles.label}>Beach Name</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="Enter beach name"
-            placeholderTextColor={COLORS.textLight}
             value={formData.beachName}
             onChangeText={(value) => handleInputChange("beachName", value)}
             maxLength={50}
           />
-          <Text style={styles.charCount}>{formData.beachName.length}/50</Text>
         </View>
 
         <View style={styles.inputSection}>
           <Text style={styles.label}>Description</Text>
           <TextInput
             style={[styles.textInput, styles.textAreaInput]}
-            placeholder="Describe the beach features..."
-            placeholderTextColor={COLORS.textLight}
             value={formData.description}
             onChangeText={(value) => handleInputChange("description", value)}
             multiline
@@ -140,17 +109,12 @@ const AddBeachScreen = ({ navigation }) => {
             maxLength={300}
             textAlignVertical="top"
           />
-          <Text style={styles.charCount}>
-            {formData.description.length}/300
-          </Text>
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.label}>Fun Facts (Optional)</Text>
+          <Text style={styles.label}>Fun Facts</Text>
           <TextInput
             style={[styles.textInput, styles.textAreaInput]}
-            placeholder="Share interesting facts..."
-            placeholderTextColor={COLORS.textLight}
             value={formData.funFacts}
             onChangeText={(value) => handleInputChange("funFacts", value)}
             multiline
@@ -158,30 +122,27 @@ const AddBeachScreen = ({ navigation }) => {
             maxLength={250}
             textAlignVertical="top"
           />
-          <Text style={styles.charCount}>{formData.funFacts.length}/250</Text>
         </View>
 
         <View style={styles.categorySection}>
-          <Text style={styles.label}>Categories (Select at least one)</Text>
+          <Text style={styles.label}>Category</Text>
           <View style={styles.categoryGrid}>
-            {categories.map((category) => (
+            {categories.map((cat, index) => (
               <TouchableOpacity
-                key={category.id}
+                key={index}
                 style={[
                   styles.categoryTag,
-                  formData.selectedCategories.includes(category.name) &&
-                    styles.categoryTagActive,
+                  formData.category === cat && styles.categoryTagActive,
                 ]}
-                onPress={() => toggleCategory(category.name)}
+                onPress={() => handleInputChange("category", cat)}
               >
                 <Text
                   style={[
                     styles.categoryTagText,
-                    formData.selectedCategories.includes(category.name) &&
-                      styles.categoryTagTextActive,
+                    formData.category === cat && styles.categoryTagTextActive,
                   ]}
                 >
-                  {category.name}
+                  {cat}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -190,23 +151,20 @@ const AddBeachScreen = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.submitButton}
-          onPress={handleSubmit}
+          onPress={handleUpdate}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color={COLORS.white} />
           ) : (
-            <Text style={styles.submitButtonText}>Upload Beach Info</Text>
+            <Text style={styles.submitButtonText}>Save Changes</Text>
           )}
         </TouchableOpacity>
-
-        <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
 };
 
-// ... (Gunakan Stylesheet bawaan kamu sebelumnya tanpa perubahan)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.primary },
   header: {
@@ -227,13 +185,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: { flex: 1, backgroundColor: COLORS.white },
   scrollContent: { padding: 20 },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.primary,
-    marginBottom: 25,
-    textAlign: "center",
-  },
   inputSection: { marginBottom: 20 },
   label: {
     fontSize: 14,
@@ -252,12 +203,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   textAreaInput: { minHeight: 100, paddingTop: 12 },
-  charCount: {
-    fontSize: 12,
-    color: COLORS.textLight,
-    marginTop: 5,
-    textAlign: "right",
-  },
   categorySection: { marginBottom: 25 },
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   categoryTag: {
@@ -285,4 +230,4 @@ const styles = StyleSheet.create({
   submitButtonText: { fontSize: 16, fontWeight: "bold", color: COLORS.white },
 });
 
-export default AddBeachScreen;
+export default EditBeachScreen;

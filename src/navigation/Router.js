@@ -10,6 +10,7 @@ import AddBeachScreen from "../screens/AddBeachScreen";
 import ReadBeachScreen from "../screens/ReadBeachScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import LikedScreen from "../screens/LikedScreen";
+import EditBeachScreen from "../screens/EditBeachScreen";
 
 // Import Icons
 import { Home as HomeIcon, Compass, Heart, User } from "lucide-react-native";
@@ -147,6 +148,11 @@ const Router = () => {
           gestureEnabled: true,
           ...bottomFadeInAnimation,
         }}
+      />
+      <Stack.Screen
+        name="EditBeach"
+        component={EditBeachScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
