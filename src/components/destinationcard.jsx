@@ -11,7 +11,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../assets/theme/colors";
 // Pastikan kamu sudah install lucide-react-native seperti di modul
-import { Heart } from "lucide-react-native";
+import { Heart, BookOpen } from "lucide-react-native";
 
 // Menerima PROPS dari komponen induk
 const DestinationCard = ({ destination, delay = 0 }) => {
@@ -175,6 +175,15 @@ const DestinationCard = ({ destination, delay = 0 }) => {
         <Text style={styles.description} numberOfLines={2}>
           {description}
         </Text>
+
+        {/* Read Now Button */}
+        <TouchableOpacity
+          style={styles.readNowButton}
+          onPress={() => navigation.navigate("ReadBeach", { destination })}
+        >
+          <BookOpen color={COLORS.white} size={16} />
+          <Text style={styles.readNowButtonText}>Read Now</Text>
+        </TouchableOpacity>
       </View>
     </Animated.View>
   );
@@ -207,7 +216,12 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
     marginBottom: 10,
   },
-  description: { fontSize: 12, color: COLORS.textLight, lineHeight: 18 },
+  description: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
 
   // Style baru untuk tombol love
   likeButton: {
@@ -217,6 +231,23 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.3)",
     padding: 8,
     borderRadius: 20,
+  },
+
+  // Read Now Button Style
+  readNowButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  readNowButtonText: {
+    color: COLORS.white,
+    fontWeight: "600",
+    fontSize: 14,
   },
 });
 

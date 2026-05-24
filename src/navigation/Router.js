@@ -6,6 +6,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from "../screens/Home";
 import DiscoverScreen from "../screens/DiscoverScreen";
 import DetailScreen from "../screens/DetailScreen";
+import AddBeachScreen from "../screens/AddBeachScreen";
+import ReadBeachScreen from "../screens/ReadBeachScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import LikedScreen from "../screens/LikedScreen";
 
@@ -119,6 +121,26 @@ const Router = () => {
       <Stack.Screen
         name="Detail"
         component={DetailScreen}
+        options={{
+          headerShown: false,
+          animationEnabled: true,
+          gestureEnabled: true,
+          ...bottomFadeInAnimation,
+        }}
+      />
+      <Stack.Screen
+        name="AddBeach"
+        component={AddBeachScreen}
+        options={{
+          headerShown: false,
+          animationEnabled: true,
+          gestureEnabled: true,
+          ...bottomFadeInAnimation,
+        }}
+      />
+      <Stack.Screen
+        name="ReadBeach"
+        component={ReadBeachScreen}
         options={{
           headerShown: false,
           animationEnabled: true,

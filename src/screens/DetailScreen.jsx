@@ -205,7 +205,7 @@ const AnimatedBookButton = () => {
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <Text style={styles.bookButtonText}>Book Now</Text>
+        <Text style={styles.bookButtonText}>Read Now</Text>
       </TouchableOpacity>
     </Animated.View>
   );

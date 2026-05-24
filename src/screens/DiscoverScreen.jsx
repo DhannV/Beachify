@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { ScrollView, View, Text, StyleSheet, Animated } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -9,7 +9,8 @@ import CategoryFilter from "../components/CategoryFilter";
 
 // --- IMPORT TEMA & DATA ---
 import { COLORS } from "../../assets/theme/colors";
-import { CategoryList, DestinationList } from "../data/destination";
+import { CategoryList } from "../data/destination";
+import { BeachContext } from "../context/BeachContext";
 
 // Component untuk Card dengan Entry Animation
 const AnimatedCardWrapper = ({ children, delay = 0 }) => {
@@ -48,12 +49,13 @@ const AnimatedCardWrapper = ({ children, delay = 0 }) => {
 
 const DiscoverScreen = () => {
   const navigation = useNavigation();
+  const { destinations } = useContext(BeachContext);
   const [selectedCategory, setSelectedCategory] = useState("Popular");
 
   const filteredDestinations =
     selectedCategory === "Popular"
-      ? DestinationList
-      : DestinationList.filter((item) => item.category === selectedCategory);
+      ? destinations
+      : destinations.filter((item) => item.category === selectedCategory);
 
   return (
     <View style={styles.mainContainer}>
