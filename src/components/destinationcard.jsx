@@ -12,8 +12,12 @@ import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../assets/theme/colors";
 import { Heart, BookOpen } from "lucide-react-native";
 
+// --- IMPORT SUPABASE CLIENT ---
+import { supabase } from "../libs/supabase"; // Pastikan path ke file supabase kamu sudah benar
+
 const DestinationCard = ({ destination, delay = 0 }) => {
-  const [isLiked, setIsLiked] = useState(false);
+  // Ambil data status awal langsung dari object destination Supabase
+  const [isLiked, setIsLiked] = useState(destination.is_liked || false);
 
   // ANIMASI
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -67,14 +71,16 @@ const DestinationCard = ({ destination, delay = 0 }) => {
         duration: 150,
         useNativeDriver: true,
       }).start();
-      // Mengarahkan ke ReadBeach (sesuai tombol bawah kamu agar konsisten)
       navigation.navigate("ReadBeach", { destination });
     });
   };
 
-  const handleLikePress = () => {
-    setIsLiked(!isLiked);
+  // --- MENGUBAH JADI ASYNC UNTUK UPDATE KE SUPABASE ---
+  const handleLikePress = async () => {
+    const updatedLikedStatus = !isLiked;
+    setIsLiked(updatedLikedStatus); // Update UI lokal terlebih dahulu agar terasa cepat (Responsif)
 
+    // Jalankan animasi tombol hati pembesar
     Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 1.3,
@@ -88,7 +94,7 @@ const DestinationCard = ({ destination, delay = 0 }) => {
       }),
     ]).start();
 
-    if (!isLiked) {
+    if (updatedLikedStatus) {
       Animated.timing(fadeInAnim, {
         toValue: 1,
         duration: 300,
@@ -100,6 +106,23 @@ const DestinationCard = ({ destination, delay = 0 }) => {
           useNativeDriver: true,
         }).start();
       });
+    }
+
+    try {
+      // Kirim pembaruan status ke tabel 'beaches' di Supabase
+      const { error } = await supabase
+        .from("beaches")
+        .update({ is_liked: updatedLikedStatus })
+        .eq("id", destination.id); // Cari berdasarkan baris ID pantai terkait
+
+      if (error) throw error;
+    } catch (error) {
+      console.error(
+        "Gagal memperbarui status favorit di database:",
+        error.message,
+      );
+      // Jika internet putus / error, kembalikan state UI ke status semula
+      setIsLiked(isLiked);
     }
   };
 
@@ -123,13 +146,8 @@ const DestinationCard = ({ destination, delay = 0 }) => {
       ]}
     >
       <TouchableOpacity onPress={handleCardPress} activeOpacity={0.9}>
-        {/* --- PERBAIKAN LOGIKA LOADING IMAGE --- */}
         <Animated.Image
-          source={
-            typeof image === "string"
-              ? { uri: image } // Jika dari Supabase (String URL)
-              : image // Jika data lokal (require)
-          }
+          source={typeof image === "string" ? { uri: image } : image}
           style={[
             styles.image,
             {
@@ -223,7 +241,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.3)",
     padding: 8,
     borderRadius: 20,
-    zIndex: 10, // Menjamin tombol tetap berada di atas gambar
+    zIndex: 10,
   },
   readNowButton: {
     backgroundColor: COLORS.primary,

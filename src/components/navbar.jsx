@@ -1,5 +1,5 @@
 // src/components/Navbar.js
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -8,185 +8,310 @@ import {
   TouchableOpacity,
   Modal,
   Animated,
+  SafeAreaView,
+  Dimensions,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import {
+  Menu,
+  X,
+  Compass,
+  Heart,
+  User,
+  ChevronRight,
+} from "lucide-react-native";
 import { COLORS } from "../../assets/theme/colors";
+
+// Mengambil lebar layar HP pengguna untuk kalkulasi animasi slide dari kanan
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.75; // Lebar menu samping (75% dari lebar layar)
 
 const Navbar = () => {
   const [menuVisible, setMenuVisible] = useState(false);
+  const navigation = useNavigation();
+
+  // Ref Animasi
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const menuItemsAnim = useRef([
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-  ]).current;
+  const slideAnim = useRef(new Animated.Value(0)).current; // 0 = Tertutup (di luar layar), 1 = Terbuka
 
   const toggleMenu = () => {
-    const newMenuVisibility = !menuVisible;
-    setMenuVisible(newMenuVisibility);
-
-    // Hamburger rotation animation
-    Animated.timing(rotateAnim, {
-      toValue: newMenuVisibility ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-
-    // Staggered menu items animation
-    if (newMenuVisibility) {
-      Animated.stagger(
-        100,
-        menuItemsAnim.map((anim) =>
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ),
-      ).start();
-    } else {
-      menuItemsAnim.forEach((anim) => {
-        Animated.timing(anim, {
+    if (menuVisible) {
+      // Animasi Menutup (Slide keluar ke arah kanan)
+      Animated.parallel([
+        Animated.timing(rotateAnim, {
           toValue: 0,
-          duration: 200,
+          duration: 250,
           useNativeDriver: true,
-        }).start();
-      });
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setMenuVisible(false));
+    } else {
+      // Tampilin modal dulu, baru jalankan Animasi Masuk (Slide dari kanan ke kiri)
+      setMenuVisible(true);
+      Animated.parallel([
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   };
 
-  const spinAnim = rotateAnim.interpolate({
+  const handleMenuPress = (targetScreen) => {
+    toggleMenu();
+    if (targetScreen === "Discover") {
+      navigation.navigate("Discover");
+    } else if (targetScreen === "Liked") {
+      navigation.navigate("Liked");
+    } else if (targetScreen === "Profile") {
+      navigation.navigate("Profile");
+    }
+  };
+
+  // Interpolasi rotasi tombol hamburger ke silang
+  const spinIcon = rotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0deg", "90deg"],
+    outputRange: ["0deg", "180deg"],
   });
 
+  // Interpolasi posisi Slide: dimulai dari luar layar kanan (SIDEBAR_WIDTH) menuju posisi pas (0)
+  const menuXTranslation = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [SIDEBAR_WIDTH, 0],
+  });
+
+  const menuItems = [
+    { name: "Discover", label: "Jelajahi Pantai Malang", icon: Compass },
+    { name: "Liked", label: "Pantai Favorit Kamu", icon: Heart },
+    { name: "Profile", label: "Pengaturan Akun", icon: User },
+  ];
+
   return (
-    <View style={styles.container}>
-      {/* Bagian Kiri: Logo */}
-      <View style={styles.logoSection}>
-        <Image
-          source={require("../../assets/images/Logo_Beachify.png")}
-          style={styles.logoImage}
-        />
-      </View>
-
-      {/* Bagian Kanan: Hamburger Menu */}
-      <Animated.View style={{ transform: [{ rotate: spinAnim }] }}>
-        <TouchableOpacity style={styles.hamburger} onPress={toggleMenu}>
-          <View style={styles.hamburgerLine} />
-          <View style={styles.hamburgerLine} />
-          <View style={styles.hamburgerLine} />
-        </TouchableOpacity>
-      </Animated.View>
-
-      {/* Modal Menu */}
-      <Modal
-        visible={menuVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => toggleMenu()}
-      >
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Bagian Kiri: Logo & Nama */}
         <TouchableOpacity
-          style={styles.overlay}
-          onPress={() => toggleMenu()}
-          activeOpacity={1}
+          style={styles.logoSection}
+          onPress={() => navigation.navigate("Home")}
+          activeOpacity={0.8}
         >
-          <View style={styles.menuModal}>
-            {["About", "Destination", "Contact us"].map((item, index) => (
-              <Animated.View
-                key={index}
-                style={{
-                  opacity: menuItemsAnim[index],
-                  transform: [
-                    {
-                      translateX: menuItemsAnim[index].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [50, 0],
-                      }),
-                    },
-                  ],
-                }}
-              >
-                <TouchableOpacity
-                  style={styles.menuItemModal}
-                  onPress={() => toggleMenu()}
-                >
-                  <Text style={styles.menuTextModal}>{item}</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
-          </View>
+          <Image
+            source={require("../../assets/images/Logo_Beachify.png")}
+            style={styles.logoImage}
+          />
         </TouchableOpacity>
-      </Modal>
-    </View>
+
+        {/* Bagian Kanan: Tombol Hamburger */}
+        <Animated.View style={{ transform: [{ rotate: spinIcon }] }}>
+          <TouchableOpacity
+            style={styles.hamburgerButton}
+            onPress={toggleMenu}
+            activeOpacity={0.7}
+          >
+            <Menu color={COLORS.primary} size={26} />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Sidebar Menu Modal */}
+        <Modal
+          visible={menuVisible}
+          transparent={true}
+          animationType="none"
+          onRequestClose={toggleMenu}
+        >
+          {/* Overlay Gelap di Background */}
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            onPress={toggleMenu}
+            activeOpacity={1}
+          >
+            {/* Kontainer Sidebar yang Muncul dari Samping Kanan */}
+            <Animated.View
+              style={[
+                styles.sidebarContainer,
+                {
+                  transform: [{ translateX: menuXTranslation }],
+                },
+              ]}
+              // Mencegah klik di dalam sidebar menutup menu secara tidak sengaja
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              {/* Bagian Atas Sidebar: Header & Tombol Close */}
+              <View style={styles.sidebarHeader}>
+                <Text style={styles.sidebarTitle}>Menu Navigasi</Text>
+                <TouchableOpacity
+                  onPress={toggleMenu}
+                  style={styles.closeButton}
+                >
+                  <X color={COLORS.primary} size={24} />
+                </TouchableOpacity>
+              </View>
+
+              {/* List Menu Items */}
+              <View style={styles.menuList}>
+                {menuItems.map((item, index) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.menuItemRow}
+                      onPress={() => handleMenuPress(item.name)}
+                    >
+                      <View style={styles.leftItemContent}>
+                        <IconComponent
+                          color={COLORS.accent}
+                          size={22}
+                          style={styles.menuIcon}
+                        />
+                        <View style={styles.itemTextGroup}>
+                          <Text style={styles.menuMainText}>{item.name}</Text>
+                          <Text style={styles.menuSubText}>{item.label}</Text>
+                        </View>
+                      </View>
+                      <ChevronRight color={COLORS.textLight} size={16} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Footer kecil di dalam sidebar agar estetik */}
+              <View style={styles.sidebarFooter}>
+                <Text style={styles.footerText}>Beachify App v1.0</Text>
+              </View>
+            </Animated.View>
+          </TouchableOpacity>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: COLORS.white,
+    paddingTop: 30, // Menghindari status bar/notch atas HP
+  },
   container: {
-    height: 60,
+    height: 65,
     backgroundColor: COLORS.white,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 15,
-    paddingTop: 5,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    elevation: 3,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    zIndex: 10,
+    borderBottomColor: "#f0f0f0",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    zIndex: 999,
   },
   logoSection: {
     flexDirection: "row",
     alignItems: "center",
   },
   logoImage: {
-    width: 50,
-    height: 50,
-    marginRight: 10,
-    borderRadius: 25,
+    width: 38,
+    height: 38,
+    marginRight: 8,
+    borderRadius: 19,
   },
-  hamburger: {
-    padding: 10,
-    justifyContent: "space-around",
-    width: 40,
-    height: 40,
+  appName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.primary,
+    letterSpacing: 0.5,
   },
-  hamburgerLine: {
-    width: 25,
-    height: 3,
-    backgroundColor: COLORS.textDark,
-    borderRadius: 2,
-    marginVertical: 3,
+  hamburgerButton: {
+    padding: 6,
   },
-  overlay: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-start",
-    marginTop: 35, // Agar modal muncul tepat di bawah navbar
+    backgroundColor: "rgba(0, 0, 0, 0.4)", // Memberikan efek blur/gelap lembut di background kiri
+    flexDirection: "row",
+    justifyContent: "flex-end", // Memaksa konten modal merapat ke ujung kanan layar
   },
-  menuModal: {
+  sidebarContainer: {
+    width: SIDEBAR_WIDTH,
+    height: "100%",
     backgroundColor: COLORS.white,
-
-    elevation: 5, // ← Android shadow
-    shadowColor: COLORS.shadow, // ← iOS shadow color
-    shadowOffset: { width: 0, height: 2 }, // ← iOS shadow offset
-    shadowOpacity: 0.15, // ← iOS shadow opacity
-    shadowRadius: 4, // ← iOS shadow blur
-  },
-  menuItemModal: {
-    paddingVertical: 15,
+    paddingTop: 50, // Memberikan ruang di bagian atas dalam sidebar
     paddingHorizontal: 20,
+    elevation: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: -4, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  sidebarHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-  menuTextModal: {
+  sidebarTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ffffff",
+  },
+  closeButton: {
+    padding: 4,
+    backgroundColor: "#f7f9fa",
+    borderRadius: 8,
+  },
+  menuList: {
+    marginTop: 20,
+    flex: 1,
+  },
+  menuItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#fbfbfb",
+  },
+  leftItemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  menuIcon: {
+    marginRight: 15,
+  },
+  itemTextGroup: {
+    flex: 1,
+  },
+  menuMainText: {
     fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.textDark,
+    fontWeight: "600",
+    color: "#2D3748",
+  },
+  menuSubText: {
+    fontSize: 12,
+    color: "#718096",
+    marginTop: 2,
+  },
+  sidebarFooter: {
+    paddingBottom: 30,
+    alignItems: "center",
+  },
+  footerText: {
+    fontSize: 12,
+    color: "#a0aec0",
   },
 });
 

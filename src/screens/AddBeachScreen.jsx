@@ -175,7 +175,7 @@ const AddBeachScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ArrowLeft color={COLORS.white} size={24} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add New Beach 🏖️</Text>
+        <Text style={styles.headerTitle}>Add New Beach</Text>
         <View style={{ width: 24 }} />
       </View>
 

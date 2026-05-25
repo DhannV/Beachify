@@ -113,7 +113,7 @@ const ReadBeachScreen = ({ route, navigation }) => {
 
           {destination.funFacts && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🎯 Fun Facts</Text>
+              <Text style={styles.sectionTitle}>Fun Facts</Text>
               <Text style={styles.sectionContent}>{destination.funFacts}</Text>
             </View>
           )}
