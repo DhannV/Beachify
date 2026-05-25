@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
 import { COLORS } from "../../assets/theme/colors";
-import axios from "axios";
 
-const API_URL = "https://6a12f17b78d0434e0d5da5f8.mockapi.io/beaches"; // GANTI DENGAN URL MOCKAPI KAMU
+// --- IMPORT SUPABASE CLIENT ---
+import { supabase } from "../libs/supabase"; // Pastikan path folder libs sudah benar
 
 const EditBeachScreen = ({ route, navigation }) => {
   const { destination } = route.params;
@@ -38,7 +38,7 @@ const EditBeachScreen = ({ route, navigation }) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  // Fungsi PUT Data menggunakan Axios
+  // --- Fungsi UPDATE Data menggunakan SDK Supabase ---
   const handleUpdate = async () => {
     if (!formData.beachName.trim() || !formData.description.trim()) {
       Alert.alert(
@@ -48,25 +48,32 @@ const EditBeachScreen = ({ route, navigation }) => {
       return;
     }
 
-    const updatedData = {
-      title: formData.beachName,
-      category: formData.category,
-      description: formData.description,
-      funFacts: formData.funFacts,
-    };
-
     try {
       setLoading(true);
-      await axios.put(`${API_URL}/${destination.id}`, updatedData);
 
-      Alert.alert("Success", "Beach information updated!", [
+      // Melakukan update pada tabel 'beaches' berdasarkan id spesifik pantai tersebut
+      const { error } = await supabase
+        .from("beaches")
+        .update({
+          title: formData.beachName,
+          category: formData.category,
+          description: formData.description,
+          funFacts: formData.funFacts,
+        })
+        .eq("id", destination.id); // Mencocokkan ID data yang akan diubah
+
+      if (error) {
+        throw error;
+      }
+
+      Alert.alert("Success", "Beach information updated successfully!", [
         {
           text: "OK",
           onPress: () => navigation.navigate("MainApp", { screen: "Discover" }),
         },
       ]);
     } catch (error) {
-      console.error("Error updating: ", error);
+      console.error("Error updating Supabase: ", error.message);
       Alert.alert("Error", "Failed to update data.");
     } finally {
       setLoading(false);

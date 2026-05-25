@@ -10,25 +10,20 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../assets/theme/colors";
-// Pastikan kamu sudah install lucide-react-native seperti di modul
 import { Heart, BookOpen } from "lucide-react-native";
 
-// Menerima PROPS dari komponen induk
 const DestinationCard = ({ destination, delay = 0 }) => {
-  // Menerapkan STATE: Mengingat apakah kartu ini disukai atau tidak
   const [isLiked, setIsLiked] = useState(false);
 
-  // ANIMASI LIKE BUTTON: Scale animation
+  // ANIMASI
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const fadeInAnim = useRef(new Animated.Value(0)).current;
   const cardScaleAnim = useRef(new Animated.Value(0)).current;
   const cardOpacityAnim = useRef(new Animated.Value(0)).current;
   const floatAnim = useRef(new Animated.Value(0)).current;
 
-  // HOOK NAVIGASI: Ambil navigation dari useNavigation
   const navigation = useNavigation();
 
-  // Staggered entrance animation untuk card
   React.useEffect(() => {
     Animated.parallel([
       Animated.timing(cardScaleAnim, {
@@ -45,7 +40,6 @@ const DestinationCard = ({ destination, delay = 0 }) => {
       }),
     ]).start();
 
-    // Floating animation untuk image - infinite
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, {
@@ -62,7 +56,6 @@ const DestinationCard = ({ destination, delay = 0 }) => {
     ).start();
   }, []);
 
-  // Fungsi untuk handle card press - navigate ke DetailScreen dengan scale animation
   const handleCardPress = () => {
     Animated.timing(cardScaleAnim, {
       toValue: 0.95,
@@ -74,15 +67,14 @@ const DestinationCard = ({ destination, delay = 0 }) => {
         duration: 150,
         useNativeDriver: true,
       }).start();
-      navigation.navigate("Detail", { destination });
+      // Mengarahkan ke ReadBeach (sesuai tombol bawah kamu agar konsisten)
+      navigation.navigate("ReadBeach", { destination });
     });
   };
 
-  // Fungsi Like dengan Animasi
   const handleLikePress = () => {
     setIsLiked(!isLiked);
 
-    // Animasi scale heart button
     Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 1.3,
@@ -96,7 +88,6 @@ const DestinationCard = ({ destination, delay = 0 }) => {
       }),
     ]).start();
 
-    // Jika baru di-like, trigger pulse animation
     if (!isLiked) {
       Animated.timing(fadeInAnim, {
         toValue: 1,
@@ -112,7 +103,6 @@ const DestinationCard = ({ destination, delay = 0 }) => {
     }
   };
 
-  // Ekstrak data dari destination object
   const { title, price, description, image } = destination;
 
   return (
@@ -132,9 +122,14 @@ const DestinationCard = ({ destination, delay = 0 }) => {
         },
       ]}
     >
-      <TouchableOpacity onPress={handleCardPress}>
+      <TouchableOpacity onPress={handleCardPress} activeOpacity={0.9}>
+        {/* --- PERBAIKAN LOGIKA LOADING IMAGE --- */}
         <Animated.Image
-          source={image}
+          source={
+            typeof image === "string"
+              ? { uri: image } // Jika dari Supabase (String URL)
+              : image // Jika data lokal (require)
+          }
           style={[
             styles.image,
             {
@@ -159,7 +154,7 @@ const DestinationCard = ({ destination, delay = 0 }) => {
             },
           ]}
         >
-          <TouchableOpacity onPress={handleLikePress}>
+          <TouchableOpacity onPress={handleLikePress} activeOpacity={0.7}>
             <Heart
               color={isLiked ? COLORS.accent : COLORS.white}
               fill={isLiked ? COLORS.accent : "transparent"}
@@ -190,14 +185,13 @@ const DestinationCard = ({ destination, delay = 0 }) => {
 };
 
 const styles = StyleSheet.create({
-  // ... (Gunakan styles lama kamu di sini, tambahkan style likeButton di bawah ini)
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 20,
     overflow: "hidden",
     width: 280,
     elevation: 8,
-    shadowColor: COLORS.shadow,
+    shadowColor: COLORS.shadow || "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
@@ -222,8 +216,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 12,
   },
-
-  // Style baru untuk tombol love
   likeButton: {
     position: "absolute",
     top: 15,
@@ -231,9 +223,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.3)",
     padding: 8,
     borderRadius: 20,
+    zIndex: 10, // Menjamin tombol tetap berada di atas gambar
   },
-
-  // Read Now Button Style
   readNowButton: {
     backgroundColor: COLORS.primary,
     borderRadius: 10,

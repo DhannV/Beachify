@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import axios from "axios";
+
+// --- IMPORT SUPABASE CLIENT ---
+import { supabase } from "../libs/supabase"; // Pastikan path ke folder libs sudah benar
 
 // --- IMPORT KOMPONEN ---
 import Navbar from "../components/navbar";
@@ -18,8 +20,6 @@ import CategoryFilter from "../components/CategoryFilter";
 // --- IMPORT TEMA & DATA ---
 import { COLORS } from "../../assets/theme/colors";
 import { CategoryList } from "../data/destination";
-
-const API_URL = "https://6a12f17b78d0434e0d5da5f8.mockapi.io/beaches"; // GANTI DENGAN URL MOCKAPI KAMU
 
 const AnimatedCardWrapper = ({ children, delay = 0 }) => {
   const fadeInAnim = useRef(new Animated.Value(0)).current;
@@ -61,14 +61,24 @@ const DiscoverScreen = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("Popular");
 
-  // Fungsi GET Data menggunakan Axios dan useCallback sesuai modul
+  // --- Fungsi GET Data menggunakan SDK Supabase ---
   const fetchBeaches = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_URL);
-      setDestinations(response.data);
+
+      // Mengambil data dari tabel 'beaches' dan diurutkan dari yang terbaru (id terbesar)
+      const { data, error } = await supabase
+        .from("beaches")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setDestinations(data || []);
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching data from Supabase: ", error.message);
     } finally {
       setLoading(false);
     }

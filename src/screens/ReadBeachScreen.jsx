@@ -11,16 +11,16 @@ import {
 } from "react-native";
 import { ArrowLeft, Share2, Heart, Edit3, Trash2 } from "lucide-react-native";
 import { COLORS } from "../../assets/theme/colors";
-import axios from "axios";
 
-const API_URL = "https://6a12f17b78d0434e0d5da5f8.mockapi.io/beaches"; // GANTI DENGAN URL MOCKAPI KAMU
+// --- IMPORT SUPABASE CLIENT ---
+import { supabase } from "../libs/supabase"; // Pastikan path folder libs sudah benar
 
 const ReadBeachScreen = ({ route, navigation }) => {
   const { destination } = route.params;
   const [isLiked, setIsLiked] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Fungsi DELETE Data menggunakan Axios
+  // --- Fungsi DELETE Data menggunakan SDK Supabase ---
   const handleDelete = () => {
     Alert.alert("Delete Beach", "Are you sure you want to delete this beach?", [
       { text: "Cancel", style: "cancel" },
@@ -30,7 +30,17 @@ const ReadBeachScreen = ({ route, navigation }) => {
         onPress: async () => {
           try {
             setDeleting(true);
-            await axios.delete(`${API_URL}/${destination.id}`);
+
+            // Perintah menghapus data di tabel 'beaches' yang memiliki id sesuai destination.id
+            const { error } = await supabase
+              .from("beaches")
+              .delete()
+              .eq("id", destination.id);
+
+            if (error) {
+              throw error;
+            }
+
             Alert.alert("Deleted", "Beach has been deleted successfully.", [
               {
                 text: "OK",
@@ -39,7 +49,7 @@ const ReadBeachScreen = ({ route, navigation }) => {
               },
             ]);
           } catch (error) {
-            console.error("Error deleting: ", error);
+            console.error("Error deleting from Supabase: ", error.message);
             Alert.alert("Error", "Failed to delete this beach.");
           } finally {
             setDeleting(false);
@@ -66,7 +76,6 @@ const ReadBeachScreen = ({ route, navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Menggunakan uri online jika data dari API berupa string URL */}
         <Image
           source={
             typeof destination.image === "string"
@@ -193,7 +202,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionContent: { fontSize: 14, color: COLORS.textDark, lineHeight: 22 },
-  // Style tambahan untuk tombol aksi REST API
   actionRow: {
     flexDirection: "row",
     gap: 10,
